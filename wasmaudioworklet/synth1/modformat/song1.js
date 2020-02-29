@@ -1,3 +1,5 @@
+// SONGMODE=PROTRACKER
+
 import { writeMod, cmd, clr } from './lib/protrackermodwriter.js';
 import { createSamples } from './lib/instrumentgenerator.js';
 import { createSampleEcho, insertNotesIntoPattern, insertSampleNotesIntoPattern, toPatternArray, createEmptyPatternArray } from './lib/patterntools.js';

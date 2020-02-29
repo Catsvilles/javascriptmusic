@@ -24,6 +24,10 @@ export function initAudioWorkletNode(componentRoot) {
         context.resume();
         
         const song = await window.compileSong();
+        if (!song) {
+            console.log('no song data');
+            return;
+        }
         const bytes = window.WASM_SYNTH_LOCATION ? await fetch(window.WASM_SYNTH_LOCATION).then(response =>
                             response.arrayBuffer()
                         ) : window.WASM_SYNTH_BYTES;                    

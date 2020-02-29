@@ -87,6 +87,13 @@ export async function initEditor(componentRoot) {
         errorMessagesElement.style.display = 'none';
 
         const songsource = editor.doc.getValue();
+
+        let songmode = 'standard';
+        if (songsource.indexOf('SONGMODE=PROTRACKER') >= 0) {
+            // special mode: we are building an amiga protracker module
+            songmode = 'protracker';
+        }
+
         localStorage.setItem('storedsongcode', songsource);
         const synthsource = assemblyscripteditor.doc.getValue();
         localStorage.setItem('storedsynthcode', synthsource);
@@ -94,7 +101,9 @@ export async function initEditor(componentRoot) {
         eval(pattern_tools_src);
         try {
             window.WASM_SYNTH_LOCATION = null;
-            eval(songsource);
+            if (songmode === 'standard') {
+                eval(songsource);
+            }
         } catch(e) {
             errorMessagesContentElement.innerText = e;
             errorMessagesElement.style.display = 'block';
@@ -120,7 +129,17 @@ export async function initEditor(componentRoot) {
             throw e;
         }
         spinner.style.display = 'none';
-        
+        console.log('song mdoe', songmode);
+        if (songmode === 'protracker') {
+            const songworker = new Worker(
+                URL.createObjectURL(new Blob([
+                    songsource.split("from './lib/").join(`from '${location.origin}/synth1/modformat/lib/`)
+                ],{type: "application/javascript"})), {type: "module"}
+            );
+            songworker.postMessage({WASM_SYNTH_BYTES: WASM_SYNTH_BYTES});
+            console.log('creating protracker song');
+            return null;
+        }
         // Use as recording buffer
         window.recordedSongData = {
             instrumentPatternLists: song.instrumentPatternLists.map(pl => new Array(pl.length).fill(0)),

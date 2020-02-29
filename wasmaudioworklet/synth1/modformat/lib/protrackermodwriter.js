@@ -76,5 +76,4 @@ export function writeMod(modFileName, moduledef) {
     });
 
     console.log(URL.createObjectURL(new Blob([output], {type: "octet/stream"})));
-    // writeFileSync(modFileName, output, {encoding: 'binary'});
 }
