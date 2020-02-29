@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { periodToSampleRatePAL } from './protrackermodwriter.js';
 
 export function resampleAndNormalize(buf) {
@@ -60,7 +59,7 @@ export function trimsampledata(buf) {
 }
 
 export function createSamples(wasmModulePath, createSampleCallbacks) {
-    const compiled = new WebAssembly.Module(readFileSync(wasmModulePath));
+    const compiled = new WebAssembly.Module(wasmModulePath);
     const imports = { 
         environment: {
             SAMPLERATE: periodToSampleRatePAL(a3()[1]) * 2
@@ -102,7 +101,7 @@ export function createSamples(wasmModulePath, createSampleCallbacks) {
         } else {
             sample.data = trimsampledata(sample.data);
         }
-        global[sample.funcname] = (note, command, value) => 
+        self[sample.funcname] = (note, command, value) => 
             note === undefined ?
             sampleno + 1 :
             typeof note === 'function' ?
