@@ -27,7 +27,7 @@ function num2word(num) {
 export const cmd = (command, value) => [0, 0, command, value];
 export const clr = [0, 0, 0, 0];
 
-export function writeMod(modFileName, moduledef) {
+export function writeMod(moduledef) {
     // http://coppershade.org/articles/More!/Topics/Protracker_File_Format/
 
     const patternsOffset = 1084;
@@ -75,5 +75,5 @@ export function writeMod(modFileName, moduledef) {
         });
     });
 
-    console.log(URL.createObjectURL(new Blob([output], {type: "octet/stream"})));
+    return output;
 }

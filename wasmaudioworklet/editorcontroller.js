@@ -129,16 +129,20 @@ export async function initEditor(componentRoot) {
             throw e;
         }
         spinner.style.display = 'none';
-        console.log('song mdoe', songmode);
+        console.log('song mode', songmode);
         if (songmode === 'protracker') {
             const songworker = new Worker(
                 URL.createObjectURL(new Blob([
                     songsource.split("from './lib/").join(`from '${location.origin}/synth1/modformat/lib/`)
                 ],{type: "application/javascript"})), {type: "module"}
             );
+            const modreciever = new Promise((resolve => songworker.onmessage = msg => resolve(
+                    {modbytes: msg.data}
+                )
+            ));
             songworker.postMessage({WASM_SYNTH_BYTES: WASM_SYNTH_BYTES});
-            console.log('creating protracker song');
-            return null;
+            
+            return await modreciever;
         }
         // Use as recording buffer
         window.recordedSongData = {
