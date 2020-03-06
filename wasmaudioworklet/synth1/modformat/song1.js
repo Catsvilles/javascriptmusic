@@ -777,5 +777,6 @@ onmessage = function(msg) {
         synthbrasslead(),
         3, 18, 8, [0,1,2,3]);
 
-    writeMod('trackerscripting.mod', moduledef);
+    postMessage(writeMod(moduledef));
+	
 }
