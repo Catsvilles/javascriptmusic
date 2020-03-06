@@ -43,8 +43,8 @@ async function initPlayer (wasm, modbytes, samplerate) {
     const heap8 = new Uint8Array(xmp.instance.exports.memory.buffer);
     
     heap8.set(modbytes, memaddr);
-    xmp.instance.exports.loadModule(memaddr, modbytes.byteLength, 44100);
-    
+
+    xmp.instance.exports.loadModule(memaddr, modbytes.byteLength, samplerate);    
 }
 
 class MyWorkletProcessor extends AudioWorkletProcessor {
@@ -57,7 +57,6 @@ class MyWorkletProcessor extends AudioWorkletProcessor {
         }
     };
     this.port.start();
-    
   }  
 
   process(inputs, outputs, parameters) {

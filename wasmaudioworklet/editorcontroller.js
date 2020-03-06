@@ -18,10 +18,10 @@ async function loadCodeMirror() {
 let webassemblySynthUpdated = false;
 const synthcompilerworker = new Worker('synth1/browsercompilerwebworker.js');
 
-async function compileWebAssemblySynth(synthsource, song) {
+async function compileWebAssemblySynth(synthsource, song, samplerate) {
     synthcompilerworker.postMessage({
         synthsource: synthsource,
-        samplerate: new AudioContext().sampleRate,
+        samplerate: samplerate,
         song: song
     });
     
@@ -88,7 +88,7 @@ export async function initEditor(componentRoot) {
 
         const songsource = editor.doc.getValue();
 
-        let songmode = 'standard';
+        let songmode = 'WASM';
         if (songsource.indexOf('SONGMODE=PROTRACKER') >= 0) {
             // special mode: we are building an amiga protracker module
             songmode = 'protracker';
@@ -101,7 +101,7 @@ export async function initEditor(componentRoot) {
         eval(pattern_tools_src);
         try {
             window.WASM_SYNTH_LOCATION = null;
-            if (songmode === 'standard') {
+            if (songmode === 'WASM') {
                 eval(songsource);
             }
         } catch(e) {
@@ -121,7 +121,11 @@ export async function initEditor(componentRoot) {
         try {
             if(!window.WASM_SYNTH_LOCATION) {                
                 spinner.style.display = 'block';
-                await compileWebAssemblySynth(synthsource, exportwasm ? song: undefined);                
+                await compileWebAssemblySynth(synthsource,
+                        exportwasm && songmode === 'WASM' ? song: undefined,
+                        songmode === 'protracker' ? 55856:
+                        new AudioContext().sampleRate                        
+                    );                
             }
         } catch(e) {
             errorMessagesContentElement.innerText = e;
@@ -142,7 +146,14 @@ export async function initEditor(componentRoot) {
             ));
             songworker.postMessage({WASM_SYNTH_BYTES: WASM_SYNTH_BYTES});
             
-            return await modreciever;
+            const song = await modreciever;
+            if(exportwasm) {
+                const linkElement = document.createElement('a');
+                linkElement.href = URL.createObjectURL(new Blob([song.modbytes]), 'application/octet-stream');
+                linkElement.download = 'song.mod';
+                linkElement.click();
+            }
+            return song;
         }
         // Use as recording buffer
         window.recordedSongData = {
