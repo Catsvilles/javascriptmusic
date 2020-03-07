@@ -3,13 +3,23 @@ let heapoffset;
 let samplebufferview;
 let samplebuffersize;
 
+let memaddr;
+let targetsamplerate;
+
 const SAMPLE_FRAMES = 128;
 let xmp = null;
 
-async function initPlayer (wasm, modbytes, samplerate) {
+async function initPlayer (wasm, samplerate) {
+    if(xmp) {
+        return;
+    }
+
+    targetsamplerate = samplerate;
+
     const NOT_IMPLEMENTED = () => {
         console.error('not implemented');
     };
+
     
     xmp = await WebAssembly.instantiate(
             wasm
@@ -38,13 +48,15 @@ async function initPlayer (wasm, modbytes, samplerate) {
             "__clock_gettime": NOT_IMPLEMENTED
         }
     });
-    
-    const memaddr = xmp.instance.exports.allocMemoryForModule(modbytes.byteLength);
-    const heap8 = new Uint8Array(xmp.instance.exports.memory.buffer);
-    
+    // 1 MB is more than enough for an Amiga mod
+    memaddr = xmp.instance.exports.allocMemoryForModule(1024 * 1024);
+}
+
+function loadSong(modbytes) {
+    const heap8 = new Uint8Array(xmp.instance.exports.memory.buffer);    
     heap8.set(modbytes, memaddr);
 
-    xmp.instance.exports.loadModule(memaddr, modbytes.byteLength, samplerate);    
+    xmp.instance.exports.loadModule(memaddr, modbytes.byteLength, targetsamplerate);    
 }
 
 class MyWorkletProcessor extends AudioWorkletProcessor {
@@ -53,7 +65,10 @@ class MyWorkletProcessor extends AudioWorkletProcessor {
     super();
     this.port.onmessage = async (msg) => {
         if(msg.data.wasm) {
-            initPlayer(msg.data.wasm, msg.data.song.modbytes, msg.data.samplerate);
+            await initPlayer(msg.data.wasm, msg.data.samplerate);
+        }
+        if(msg.data.song) {
+            loadSong(msg.data.song.modbytes);
         }
     };
     this.port.start();

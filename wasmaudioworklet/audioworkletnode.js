@@ -28,9 +28,10 @@ export function initAudioWorkletNode(componentRoot) {
         let bytes;
 
         if(song.modbytes) {
-            await context.audioWorklet.addModule('modaudioworkletprocessor.js');
             bytes = await fetch('https://unpkg.com/wasm-mod-player@0.0.1/wasm-mod-player.wasm')
                             .then(r => r.arrayBuffer());
+            
+            await context.audioWorklet.addModule('modaudioworkletprocessor.js');
         } else {
             bytes = window.WASM_SYNTH_LOCATION ? await fetch(window.WASM_SYNTH_LOCATION).then(response =>
                                 response.arrayBuffer()
