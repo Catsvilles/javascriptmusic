@@ -79,21 +79,29 @@ export function createSamples(wasmModulePath, createSampleCallbacks) {
         instance.memory.grow(16);
     
         const instancebufferptr = instance.allocateSampleBuffer(INSTANCE_FRAMES);
-        const instancebuffer = new Float32Array(instance.memory.buffer, instancebufferptr, INSTANCE_FRAMES);
-        
         instance.toggleSongPlay(false);
     
+        const createSampleCallbackOptions = {
+            offsetFrames: 0
+        };
         const sample = Object.assign({
                 finetune: 0,
                 volume: 64,
                 loopstart: 0,
                 looplength: 0,
                 looptransitionlength: 0
-            }, createSampleCallBack(instance)
+            }, createSampleCallBack(instance, createSampleCallbackOptions)
         );
+
+        const instancebuffer = new Float32Array(
+                    instance.memory.buffer,
+                    instancebufferptr + createSampleCallbackOptions.offsetFrames * 4,
+                    INSTANCE_FRAMES - createSampleCallbackOptions.offsetFrames);
+
         if (sample.looptransitionlength) {
             makeClickFreeLoop(instancebuffer, sample.loopstart * 2, sample.looplength * 2, sample.looptransitionlength);
         }
+
         sample.data = resampleAndNormalize(instancebuffer);
         if (sample.looplength) {
             // delete sample data after loop end
